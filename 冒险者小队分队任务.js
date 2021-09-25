@@ -837,7 +837,7 @@
     }
     // 求推荐顺序
     if (success.length !== 0) {
-      recommendOrder.push(10000)
+      recommendOrder.push((index + 1) * 10000)
     } else if (maybe.length !== 0) {
       recommendOrder.push(
         (10 - maybe[0].trainingProcess.reduce((_, __) => _ + Math.abs(__), 0)) * 100 + index
