@@ -14,15 +14,24 @@
     [185, 310, 465],
     [310, 480, 170],
     [370, 355, 345],
+
+    // [530, 275, 385],
+    // [245, 560, 385],
+    // [265, 385, 540],
+    // [385, 560, 245],
+    // [385, 265, 540],
+    // [530, 385, 275],
+    // [385, 560, 245],
+    // [385, 265, 540],
   ]
 
   // ①这里写训练获得的点数(总和为200或280或400)
-  const trainingPoints = [120, 40, 120]
+  const trainingPoints = [120, 160, 120]
 
   // ③展示结果数（0表示所有）
   const IWantTimes = 3
 
-  // ④选择必定使用的队员序号，示例表示一定会用1号幻术师和3号斧术师，一般用于练级或吉兆
+  // ④选择必定使用的队员序号，注释示例表示一定会用1号幻术师和3号斧术师，一般用于练级或吉兆
   const mustUsed = []
   // const mustUsed = [1,3]
 
@@ -31,42 +40,42 @@
     // 1
     {
       name: '幻术师',
-      level: 39,
+      level: 43,
     },
     // 2
     {
       name: '弓箭手',
-      level: 46,
+      level: 49,
     },
     // 3
     {
       name: '斧术师',
-      level: 42,
+      level: 47,
     },
     // 4
     {
       name: '幻术师',
-      level: 44,
+      level: 47,
     },
     // 5
     {
       name: '枪术师',
-      level: 42,
+      level: 46,
     },
     // 6
     {
       name: '秘术师',
-      level: 41,
+      level: 42,
     },
     // 7
     {
       name: '咒术师',
-      level: 40,
+      level: 41,
     },
     // 8
     {
       name: '剑术师',
-      level: 40,
+      level: 42,
     },
   ]
 
@@ -740,30 +749,57 @@
       0,
       mustUsed.map((val) => val - 1)
     )
-    const success = res.filter((val) =>
-      val.ablilitiesError.every((_, __) => _ <= trainingPoints[__])
+
+    const success = []
+    const maybe = []
+    const failer = []
+
+    res.forEach((val) => {
+      if (val.ablilitiesError.every((val, index) => val <= trainingPoints[index])) {
+        success.push(val)
+      } else if (val.trainingProcess !== null) {
+        maybe.push(val)
+      } else {
+        failer.push(val)
+      }
+    })
+
+    maybe.sort(
+      (a, b) =>
+        arrSum(a.trainingProcess.map((val) => Math.abs(val))) -
+        arrSum(b.trainingProcess.map((val) => Math.abs(val)))
     )
-    const maybe = res
-      .filter((val) => val.trainingProcess !== null)
-      .sort(
-        (a, b) =>
-          arrSum(a.trainingProcess.map((val) => Math.abs(val))) -
-          arrSum(b.trainingProcess.map((val) => Math.abs(val)))
-      )
-    const failer = res
-      .filter(
-        (val) =>
-          val.ablilitiesError.some((_, __) => _ > trainingPoints[__]) &&
-          val.trainingProcess === null
-      )
-      // 需要的最少点数排序，实际上大致就是选取队员的最高等级排序
-      .sort((a, b) => a.wanted - b.wanted)
-    return { success, maybe, failer }
+    const satisfy2 = []
+    const satisfy1 = []
+    const satisfy0 = []
+    failer.forEach((val) => {
+      const { ablilitiesError } = val
+      let count = 0
+      for (let i = 0; i < ablilitiesError.length; i++) {
+        if (ablilitiesError[i] <= trainingPoints[i]) {
+          count++
+        }
+      }
+      switch (count) {
+        case 0:
+          satisfy0.push(val)
+          break
+        case 1:
+          satisfy1.push(val)
+          break
+        case 2:
+          satisfy2.push(val)
+          break
+        default:
+          break
+      }
+    })
+    return { success, maybe, failer: { satisfy2, satisfy1, satisfy0 } }
   }
 
   // 计算训练点数总和
   const totalTrainingPoints = arrSum(trainingPoints)
-  // res是{ success, maybe, failer }的数组，对应每项任务
+  // res是{ success, maybe, failer{} }的数组，对应每项任务
   const res = missions.map((val) => solve(val))
 
   const logRes = (val, index) => {
@@ -776,9 +812,9 @@
         selectedHerosStr += `${val + 1}号${heros[val].name}，`
       })
     console.log(selectedHerosStr)
-    console.log(`小队队员属性为：${totalAbilities.join(', ')}，共计${arrSum(totalAbilities)}点`)
-    console.log(`需要训练点数为：${ablilitiesError.join(', ')}，共计${wanted}点。`)
     if (trainingProcess !== null) {
+      console.log(`小队队员属性为：${totalAbilities.join(', ')}，共计${arrSum(totalAbilities)}点`)
+      console.log(`需要训练点数为：${ablilitiesError.join(', ')}，共计${wanted}点。`)
       console.log(`建议训练次数：${arrSum(trainingProcess.map((val) => Math.abs(val)))}`)
       console.log(`建议训练过程：`)
       if (trainingProcess[0] > 0) {
@@ -798,60 +834,75 @@
       }
     }
   }
-  const filterHandle = (_, __) => (IWantTimes === 0 ? true : __ < IWantTimes)
-
-  const recommendOrder = []
+  const filterDisplayTimes = (_, __) => (IWantTimes === 0 ? true : __ < IWantTimes)
 
   // 从这里开始输出
   console.log('结果如下，队员前序号代表其对应位置，防止多个同名队员无法判别。')
   res.forEach((val, index) => {
-    const { success, maybe, failer } = val
+    const {
+      success,
+      maybe,
+      failer: { satisfy2, satisfy1, satisfy0 },
+    } = val
 
-    console.log(`/********************************************/`)
-    console.log(
-      `/*          第${index + 1}项任务，任务需要${arrSum(missions[index])}点          */`
-    )
-    console.log(`/********************************************/`)
+    console.log(`******************************`)
+    console.log(`**         第${index + 1}项任务         **`)
+    console.log(`******************************`)
     // 输出必定成功
     console.log(
-      `必定成功的有${success.length}种结果(显示${IWantTimes === 0 ? '全部' : IWantTimes}种)：`
+      `必定成功的有${success.length}种(显示${IWantTimes === 0 ? '全部' : IWantTimes}种)：`
     )
-    success.filter(filterHandle).forEach(logRes)
+    success.filter(filterDisplayTimes).forEach(logRes)
     if (success.length === 0) {
       // 输出可能成功
       console.log(
-        `未必成功但可以训练成功的有${maybe.length}种结果，以训练次数由小到大排序(显示${
+        `未必成功但可以训练成功的有${maybe.length}种，以训练次数由小到大排序(显示${
           IWantTimes === 0 ? '全部' : IWantTimes
         }种)：`
       )
-      maybe.filter(filterHandle).forEach(logRes)
+      maybe.filter(filterDisplayTimes).forEach(logRes)
       // 输出不能成功
       if (maybe.length === 0) {
         console.log(
-          `不能完成的有${failer.length}种结果，以相差点数由小到在排序(显示${
-            IWantTimes === 0 ? '全部' : IWantTimes
-          }种)：`
+          `两项属性达标的有${satisfy2.length}种(显示${IWantTimes === 0 ? '全部' : IWantTimes}种)：`
         )
-        failer.filter(filterHandle).forEach(logRes)
+        satisfy2.filter(filterDisplayTimes).forEach(logRes)
+        if (satisfy2.length === 0) {
+          console.log(
+            `其中两项属性达标的有${satisfy1.length}种(显示${
+              IWantTimes === 0 ? '全部' : IWantTimes
+            }种)：`
+          )
+          satisfy1.filter(filterDisplayTimes).forEach(logRes)
+          if (satisfy1.length === 0) {
+            console.log(
+              `其中两项属性达标的有${satisfy0.length}种(显示${
+                IWantTimes === 0 ? '全部' : IWantTimes
+              }种)：`
+            )
+            satisfy0.filter(filterDisplayTimes).forEach(logRes)
+          }
+        }
       }
     }
-    // 求推荐顺序
-    if (success.length !== 0) {
-      recommendOrder.push((index + 1) * 10000)
-    } else if (maybe.length !== 0) {
-      recommendOrder.push(
-        (10 - maybe[0].trainingProcess.reduce((_, __) => _ + Math.abs(__), 0)) * 100 + index
-      )
-    } else {
-      recommendOrder.push(99 - index) //最大99
-    }
+    // // 求推荐顺序
+    // const recommendOrder = []
+    // if (success.length !== 0) {
+    //   recommendOrder.push((index + 1) * 10000)
+    // } else if (maybe.length !== 0) {
+    //   recommendOrder.push(
+    //     (10 - maybe[0].trainingProcess.reduce((_, __) => _ + Math.abs(__), 0)) * 100 + index
+    //   )
+    // } else {
+    //   recommendOrder.push(99 - index) //最大99
+    // }
   })
   console.log(`-------------------------------------------`)
-  for (let i = 0; i < missions.length; i++) {
-    const index = recommendOrder.indexOf(Math.max(...recommendOrder))
-    console.log(`第${i + 1}推荐完成第${index + 1}个任务`)
-    recommendOrder[index] = 0
-  }
+  // for (let i = 0; i < missions.length; i++) {
+  //   const index = recommendOrder.indexOf(Math.max(...recommendOrder))
+  //   console.log(`第${i + 1}推荐完成第${index + 1}个任务`)
+  //   recommendOrder[index] = 0
+  // }
   console.log('此结果不包含吉兆，请根据实际进行选择。')
   console.log('以上结果仅供参考，队员属性数据来源为灰机wiki最终幻想XIV中文维基。')
   console.log('作者：梅利奥达夫 旅人栈桥。')
