@@ -1,7 +1,7 @@
 /**
  * Author: Tyllllll
- * Version: 1.0
- * Date: 09/25/2021
+ * Version: 1.1
+ * Date: 09/26/2021
  */
 ;(() => {
   // ①这里写要完成的任务信息
@@ -32,7 +32,7 @@
   const IWantTimes = 3
 
   // ④选择必定使用的队员序号，注释示例表示一定会用1号幻术师和3号斧术师，一般用于练级或吉兆
-  const mustUsed = []
+  const mustUsed = [2]
   // const mustUsed = [1,3]
 
   // ⑤这里写你的小队队员信息
@@ -45,32 +45,32 @@
     // 2
     {
       name: '弓箭手',
-      level: 49,
+      level: 50,
     },
     // 3
     {
       name: '斧术师',
-      level: 47,
+      level: 49,
     },
     // 4
     {
       name: '幻术师',
-      level: 47,
+      level: 48,
     },
     // 5
     {
       name: '枪术师',
-      level: 46,
+      level: 48,
     },
     // 6
     {
       name: '秘术师',
-      level: 42,
+      level: 43,
     },
     // 7
     {
       name: '咒术师',
-      level: 41,
+      level: 44,
     },
     // 8
     {
