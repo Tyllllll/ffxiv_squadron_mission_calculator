@@ -1,7 +1,7 @@
 /**
  * Author: Tyllllll
  * Version: 1.1
- * Date: 09/26/2021
+ * Date: 09/30/2021
  */
 ;(() => {
   // ①这里写要完成的任务信息
@@ -869,14 +869,14 @@
         satisfy2.filter(filterDisplayTimes).forEach(logRes)
         if (satisfy2.length === 0) {
           console.log(
-            `其中两项属性达标的有${satisfy1.length}种(显示${
+            `其中一项属性达标的有${satisfy1.length}种(显示${
               IWantTimes === 0 ? '全部' : IWantTimes
             }种)：`
           )
           satisfy1.filter(filterDisplayTimes).forEach(logRes)
           if (satisfy1.length === 0) {
             console.log(
-              `其中两项属性达标的有${satisfy0.length}种(显示${
+              `其中零项属性达标的有${satisfy0.length}种(显示${
                 IWantTimes === 0 ? '全部' : IWantTimes
               }种)：`
             )
